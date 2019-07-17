@@ -1,0 +1,50 @@
+---
+title: "Automatic Report"
+subtitle: "`r paste('Interim:', params$interim_num)`"
+date: "`r params$todays_date`"
+author: "TKI"
+output: 
+  html_document: default
+  pdf_document: default
+params:
+  todays_date: !r Sys.Date()
+  interim_num: NULL
+  raw_dat: NULL
+  agg_dat: NULL
+  fit: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE,
+	comment = ""
+)
+```
+
+
+```{r pkgs}
+library(automaticr)
+library(tidybayes)
+library(bayesplot)
+```
+
+# Background
+
+Report which will summarise interim analysis results.
+
+# Results
+
+`r nrow(params$raw_dat)` randomised.
+
+
+
+```{r dat}
+head(params$agg_dat, 5)
+```
+
+
+```{r mod}
+print(params$fit)
+```
