@@ -161,16 +161,6 @@ gather(data.frame(model_rank)) %>%
 
 
 ```{r, fig.cap = "Probability best"}
-gather(data.frame(model_rank)) %>% 
-  mutate(key = factor(key, levels = paste0("rnk.", 1:13, "."))) %>%
-  ggplot(., aes(value)) + 
-  facet_wrap( ~ key) + 
-  geom_bar(aes(y = ..prop..)) +
-  labs(x = "Rank", y = "Probability")
-```
-
-
-```{r, fig.cap = "Probability best"}
 gather(model_p_best) %>% 
   mutate(key = factor(key, levels = paste0("p_best[", 1:13, "]"), labels = 1:13)) %>%
   group_by(key) %>%
