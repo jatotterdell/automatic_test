@@ -22,10 +22,15 @@ int_log_path  <- "input_files/interim_log.csv"
 mod_path      <- "stan/automatic_model_ran.stan"
 alloc_seq_dir <- "output_files/"
 log_dir       <- "log/"
+interim_dat_dir <- "interim_data/"
 
 if(!dir.exists(log_dir)) {
   message("Creating log folder.")
   dir.create(log_dir)
+}
+if(!dir.exists(interim_dat_dir)) {
+  message("Creating interim data folder.")
+  dir.create(interim_dat_dir)
 }
 
 options(keep.source = TRUE)

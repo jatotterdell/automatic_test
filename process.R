@@ -46,6 +46,7 @@ if(interim_due) {
 
   alloc_seq <- generate_allocation_sequence(1000, post_quant$alloc_prob, interim_seeds[1])
   write_allocation_sequence(paste0(alloc_seq_dir, "alloc_seq_", current_interim, ".csv"), alloc_seq, current_interim)
+  readr::write_csv(agg_data, paste0(interim_dat_dir, "dat_interim_", current_interim, ".csv"))
 
   # Generate Interim Reports in HTML and PDF
   if(!dir.exists("reports")) {
