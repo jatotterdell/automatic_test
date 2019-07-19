@@ -10,8 +10,10 @@ params:
   todays_date: !r Sys.Date()
   interim_num: NULL
   raw_dat: NULL
+  proc_dat: NULL
   agg_dat: NULL
-  fit: NULL
+  mod_fit: NULL
+  post_quant: NULL
 ---
 
 ```{r setup, include=FALSE}
@@ -19,25 +21,59 @@ knitr::opts_chunk$set(
 	echo = FALSE,
 	message = FALSE,
 	warning = FALSE,
-	comment = ""
+	comment = "",
+	fig.height = 4,
+	fig.width = 6
 )
 ```
 
 
 ```{r pkgs}
 library(automaticr)
+library(dplyr)
+library(tidyr)
 library(tidybayes)
 library(bayesplot)
+library(ggplot2)
 ```
 
 # Background
 
 Report which will summarise interim analysis results.
 
+Model
+$$
+\begin{aligned}
+\eta_i &= T_i^\top\alpha + X_i^\top\beta + Z_i^\top\gamma \\
+&= T_i^\top\alpha + X_i^\top\beta + \sum_{l=1}^3 Z_{li}^\top\gamma_l \\
+\alpha &\sim N(0, \sigma^2_\alpha) \\
+\beta &\sim N(0, \sigma^2_\beta) \\
+\gamma_1|\tau_1^2 &\sim N(0, \tau_1^2) \\
+\gamma_2|\tau_2^2 &\sim N(0, \tau_2^2) \\
+\gamma_3|\tau_3^2 &\sim N(0, \tau_3^2)
+\end{aligned}
+$$
+where $T_i$ indicates control or treatment, $X$ is design matrix for scheduled vaccnation age, $Z$ is design for message content and timing. For example
+$$
+T_i^\top = \begin{cases} (0, 1) \quad \text{if intervention} \\ (1, 0) \quad \text{if standard} \end{cases}
+$$
+
+$$
+X = \begin{pmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 &  1 \\ -1 & -1 & -1\end{pmatrix}
+$$
+
+
 # Results
 
 `r nrow(params$raw_dat)` randomised.
 
+```{r}
+model_draws <- as.matrix(params$mod_fit, pars = c("beta_ctr", "beta_trt", "gamma1", "gamma2", "gamma3"))
+model_mu <- model_draws %*% t(automaticr:::design_matrix)
+model_rank <- as.matrix(params$mod_fit, pars = "rnk")
+model_p_best <- as.data.frame(params$mod_fit, pars = "p_best")
+model_p_better_control <- as.data.frame(params$mod_fit, pars = "p_better_than_control")
+```
 
 
 ```{r dat}
@@ -46,5 +82,127 @@ head(params$agg_dat, 5)
 
 
 ```{r mod}
-print(params$fit)
+print(params$mod_fit)
+```
+
+
+```{r traceplots}
+traceplot(params$mod_fit, pars = c("beta_ctr", "beta_trt"))
+traceplot(params$mod_fit, pars = "beta")
+traceplot(params$mod_fit, pars ="gamma1")
+traceplot(params$mod_fit, pars ="gamma2")
+traceplot(params$mod_fit, pars ="gamma3")
+```
+
+
+```{r}
+fix_eff <- as.data.frame(params$mod_fit, pars = c("beta_ctr", "beta_trt"))
+fix_eff_long <- gather(fix_eff)
+ggplot(fix_eff_long, aes(x = value)) +
+  facet_wrap( ~ key) +
+  geom_histogram(bins = 50)
+```
+
+
+```{r, fig.cap = "Message"}
+ran_eff <- as.data.frame(params$mod_fit, pars = c("gamma1"))
+ran_eff_long <- gather(ran_eff)
+ggplot(ran_eff_long, aes(x = value)) +
+  facet_wrap( ~ key) +
+  geom_histogram(bins = 50)
+```
+
+
+```{r, fig.cap = "Timing"}
+ran_eff <- as.data.frame(params$mod_fit, pars = c("gamma2"))
+ran_eff_long <- gather(ran_eff)
+ggplot(ran_eff_long, aes(x = value)) +
+  facet_wrap( ~ key) +
+  geom_histogram(bins = 50)
+```
+
+
+```{r, fig.cap = "Arm"}
+ran_eff <- as.data.frame(params$mod_fit, pars = c("gamma3"))
+ran_eff_long <- gather(ran_eff) %>%
+  mutate(key = factor(key, levels = paste0("gamma3[", 1:12, "]")))
+ggplot(ran_eff_long, aes(x = value)) +
+  facet_wrap( ~ key) +
+  geom_histogram(bins = 50)
+```
+
+
+```{r, fig.cap = "Arm"}
+sd_comp <- as.data.frame(params$mod_fit, pars = c("sd_1", "sd_2", "sd_3"))
+sd_comp_long <- gather(sd_comp)
+ggplot(sd_comp_long, aes(x = value)) +
+  facet_wrap( ~ key) +
+  geom_histogram(bins = 50)
+```
+
+
+```{r, fig.cap = "Linear Predictors"}
+mu_long <- gather(as.data.frame(model_mu)) %>%
+  mutate(key = factor(key, levels = paste0("V", 1:13)))
+ggplot(mu_long, aes(x = value)) +
+  facet_wrap( ~ key) +
+  geom_histogram(bins = 50)
+```
+
+
+```{r, fig.cap = "Rank probability"}
+gather(data.frame(model_rank)) %>% 
+  mutate(key = factor(key, levels = paste0("rnk.", 1:13, "."))) %>%
+  ggplot(., aes(value)) + 
+  facet_wrap( ~ key) + 
+  geom_bar(aes(y = ..prop..)) +
+  labs(x = "Rank", y = "Probability")
+```
+
+
+```{r, fig.cap = "Probability best"}
+gather(data.frame(model_rank)) %>% 
+  mutate(key = factor(key, levels = paste0("rnk.", 1:13, "."))) %>%
+  ggplot(., aes(value)) + 
+  facet_wrap( ~ key) + 
+  geom_bar(aes(y = ..prop..)) +
+  labs(x = "Rank", y = "Probability")
+```
+
+
+```{r, fig.cap = "Probability best"}
+gather(model_p_best) %>% 
+  mutate(key = factor(key, levels = paste0("p_best[", 1:13, "]"), labels = 1:13)) %>%
+  group_by(key) %>%
+  summarise(p = mean(value), s = sd(value)) %>%
+  ungroup() %>%
+  mutate(is_zero = p < automaticr:::trial_params$zero_alloc_thres) %>%
+  ggplot(., aes(key, p)) + 
+  geom_point(aes(fill = is_zero), shape = 21, size = 2) +
+  geom_segment(aes(x = key, xend = key, y = 0, yend = p)) +
+  geom_hline(yintercept = automaticr:::trial_params$zero_alloc_thres, lty = 2) +
+  geom_hline(yintercept = automaticr:::trial_params$sup_thres, lty = 2) +
+  scale_fill_manual("", values = c(NA, "black")) +
+  guides(fill = FALSE) +
+  labs(x = "Arm", y = "Probability best") +
+  ylim(0, 1)
+```
+
+
+```{r, fig.cap = "Probability better than control"}
+gather(model_p_better_control) %>% 
+  mutate(key = factor(key, levels = paste0("p_better_than_control[", 1:13, "]"), labels = 1:13)) %>%
+  group_by(key) %>%
+  summarise(p = mean(value)) %>%
+  ungroup() %>%
+  mutate(is_zero = p < automaticr:::trial_params$zero_alloc_thres) %>%
+  ggplot(., aes(key, p)) + 
+  geom_point(aes(fill = is_zero), shape = 21, size = 2) +
+  geom_segment(aes(x = key, xend = key, y = 0, yend = p)) +
+  geom_hline(yintercept = automaticr:::trial_params$zero_alloc_thres, lty = 2) +
+  geom_hline(yintercept = automaticr:::trial_params$sup_thres, lty = 2) +
+  scale_fill_manual("", values = c(NA, "black")) +
+  guides(fill = FALSE) +
+  labs(x = "Arm", y = "Probability better than standard") +
+  ylim(0, 1)
 ```

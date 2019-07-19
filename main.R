@@ -10,6 +10,8 @@ library(rmarkdown)
 library(tidyverse)
 library(lubridate)
 
+options(mc.cores = parallel::detectCores() - 1)
+
 todays_date <- Sys.Date()
 threshold_not_reached_exit_code <- 100
 interim_completed_exit_code <- 2
@@ -17,7 +19,7 @@ interim_completed_exit_code <- 2
 # Fixed files
 raw_dat_path  <- "input_files/accumulated_data.csv"
 int_log_path  <- "input_files/interim_log.csv"
-mod_path      <- "stan/placeholder_model.stan"
+mod_path      <- "stan/automatic_model_ran.stan"
 alloc_seq_dir <- "output_files/"
 log_dir       <- "log/"
 

@@ -1,10 +1,10 @@
 #!/bin/bash
 clean() {
-  rm reports/*
-  rm log/*
-  rm output_files/*
-  rm input_files/accumulated_data.csv
-  rm input_files/interim_log.csv
+  find reports/ -maxdepth 1 -name '*' ! -name .gitignore -type f -delete
+  find log/ -maxdepth 1 -name '*' ! -name .gitignore -type f -delete
+  find output_files/ -maxdepth 1 -name '*' ! -name .gitignore -type f -delete
+  find input_files/ -maxdepth 1 -name '*' ! -name .gitignore -type f -delete
+  find interim_data/ -maxdepth 1 -name '*' ! -name .gitignore -type f -delete
 }
 append_dat() {
   Rscript --no-save --no-restore append_sim_data.R
