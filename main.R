@@ -7,10 +7,17 @@ library(futile.logger)
 library(tryCatchLog)
 library(rstan)
 library(rmarkdown)
-library(tidyverse)
+# I think you only need dplyr rather than the full tidyverse
+library(dplyr)
+library(tidyr)
 library(lubridate)
+# for process.R
+library(bookdown)
+library(readr)
+library(bayesplot)
 
 options(mc.cores = parallel::detectCores() - 1)
+rstan_options(auto_write = TRUE)
 
 todays_date <- Sys.Date()
 threshold_not_reached_exit_code <- 100
