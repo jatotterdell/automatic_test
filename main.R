@@ -7,11 +7,9 @@ library(futile.logger)
 library(tryCatchLog)
 library(rstan)
 library(rmarkdown)
-# I think you only need dplyr rather than the full tidyverse
 library(dplyr)
 library(tidyr)
 library(lubridate)
-# for process.R
 library(bookdown)
 library(readr)
 library(bayesplot)

@@ -2,18 +2,18 @@
 
 # Setup
 if(!file.exists(int_log_path)) {
-  # Retrieve, interim control parameters e.g. number of arms, 
+  # Retrieve, interim control parameters e.g. number of arms,
   # initial allocation probabilities.
   automaticr::init_interim_log(int_log_path)
 }
 if(!file.exists(paste0(alloc_seq_dir, "alloc_seq_0.csv"))) {
   message("Creating initial allocation sequence.")
-  
-  # minor - maybe encapsulate the seed generation in a public method rather 
+
+  # minor - maybe encapsulate the seed generation in a public method rather
   # than referencing an automaticr member obj directly
   seed <- as.numeric(automaticr:::interim_schedule[automaticr:::interim_schedule$interim_num == 0, "alloc_seed"])
-  
-  # as above wrt to init_alloc. 
+
+  # as above wrt to init_alloc.
   # can use double colon for prefixing automaticr methods for clarity and namespace.
   alloc_seq <- automaticr::generate_allocation_sequence(1000, automaticr:::trial_params$init_allocations, seed)
   write_allocation_sequence(paste0(alloc_seq_dir, "alloc_seq_0.csv"), alloc_seq, 0)
@@ -40,7 +40,7 @@ final               <- current_interim == max(automaticr:::interim_schedule[, "i
 if(interim_due) {
 
   # was "warning" intenetional?
-  message(paste("Interim is due\nCurrent index sample size:", current_sample_size))
+  warning(paste("Interim is due\nCurrent index sample size:", current_sample_size))
 
   # minor - same comment as previous - it might be better to encapsulate the schedule in a public getter func
   interim_seeds <- as.numeric(automaticr:::interim_schedule[automaticr:::interim_schedule$interim_num == current_interim, c("alloc_seed", "stan_seed")])
@@ -94,14 +94,14 @@ if(interim_due) {
       interim_num = current_interim,
       post_quant = post_quant))
 
-  message("Interim complete. Updating interim log.")
-  update_interim_log(int_log_path, todays_date, current_interim, current_sample_size, post_quant$alloc_prob, post_quant$is_alloc)
+  warning("Interim complete. Updating interim log.")
+  automaticr::update_interim_log(int_log_path, todays_date, current_interim, current_sample_size, post_quant$alloc_prob, post_quant$is_alloc)
 
   quit(status = interim_completed_exit_code)
 
 } else {
 
-  message(paste("Interim not due\nCurrent index sample size:", current_sample_size))
+  warning(paste("Interim not due\nCurrent index sample size:", current_sample_size))
   quit(status = threshold_not_reached_exit_code)
 
 }
