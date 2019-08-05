@@ -20,10 +20,10 @@ clean() {
   find interim_data/ -maxdepth 1 -name '*' ! -name .gitignore -type f -delete
 }
 append_dat() {
-  /sbin/Rscript --no-save --no-restore append_sim_data.R
+  Rscript --no-save --no-restore append_sim_data.R
 }
 run_main() {
-  /sbin/Rscript --no-save --no-restore --verbose main.R
+  Rscript --no-save --no-restore --verbose main.R
 }
 
 while getopts ':cdrh' flag; do
@@ -32,7 +32,7 @@ while getopts ':cdrh' flag; do
     d) echo "Appending simulated data"; append_dat ;;
     r) echo "Running main.R"; run_main ;;
     h) echo "Showing help information" ; help;;
-    \?) echo "No option selected"; usage;; 
+    \?) echo "No option selected"; usage;;
   esac
 done
 
